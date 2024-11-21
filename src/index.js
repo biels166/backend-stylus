@@ -1,11 +1,12 @@
 const express = require('express')
 const cors = require("cors")
+require('dotenv').config()
 
 const server = express()
 server.use(cors())
 server.use(express.json())
 
-server.listen(3000, () => {
+server.listen(process.env.PORT || 3000, () => {
     console.log("API ONLINE")
 })
 

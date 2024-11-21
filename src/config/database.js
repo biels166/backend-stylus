@@ -1,18 +1,39 @@
 const mongoose = require('mongoose')
-require('dotenv').config()
+const { env } = require('node:process')
 
-let url = ""
+let connectionString = ""
+let connectionType = ""
+let succes_On_Create_Connection_String = false
 
-if (process.env.ENVCONFIG === "PRD") {
-    const user = process.env.MONGO_DB_USER
-    const secret = process.env.MONGO_DB_SECRET
-
-    url = `mongodb+srv://${user}:${secret}@clusterstylus.tfhgf.mongodb.net/?retryWrites=true&w=majority&appName=ClusterStylus`
+for (var i = 1; i <= 10; i++) {
+    if (env.ENVCONFIG === "PRD") {
+        connectionString = `mongodb+srv://${env.MONGO_DB_USER}:${env.MONGO_DB_SECRET}@${env.CLUSTER_STYLUS}`
+        connectionType = "mongodb+srv"
+        succes_On_Create_Connection_String = true
+        break
+    }
+    else if (env.ENVCONFIG === "DEV") {
+        connectionString = env.LOCALHOST
+        connectionType = "mongodb"
+        succes_On_Create_Connection_String = true
+        break
+    }
+    else {
+        console.log(`Configurando ambiente ${i}....`)
+        
+        const setEnvironmentConfig = require('./environment.js')
+        setEnvironmentConfig()
+    }
 }
-else
-    url = 'mongodb://localhost:27017/stylus'
 
+if (succes_On_Create_Connection_String) {
+    mongoose.connect(connectionString)
+        .then(console.log(`Conexão ${connectionType}`))
+        .catch(erro => console.error("Erro ao conectar: ", erro))
+}
+else {
+    throw new Exception("Ocorreu um erro ao criar Connection String.")
+}
 
-mongoose.connect(url)
 
 module.exports = mongoose
