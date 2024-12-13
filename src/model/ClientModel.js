@@ -2,6 +2,7 @@ const mongoose = require('../config/database')
 const Schema = mongoose.Schema
 
 const ClientSchema = new Schema({
+    type: {type: String, required: true},
     name: {type: String, required: true},
     document: {type: String, required: true},
     email: {type: String},
@@ -12,7 +13,7 @@ const ClientSchema = new Schema({
     district: {type: String, required: true},
     city: {type: String, required: true},
     state: {type: String, required: true},
-    complement: {type: String}
+    complement: {type: String},
 })
 
 module.exports = mongoose.model('Client', ClientSchema)

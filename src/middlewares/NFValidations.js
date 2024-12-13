@@ -9,6 +9,8 @@ const NFValidation = async (req, res, next) => {
         return res.status(400).json({ error: 'O valor da NF é de preenchimento obrigatório.' })
     else if (!req.body.serviceOrder)
         return res.status(400).json({ error: 'A OS é de preenchimento obrigatório.' })
+    else if (!req.body.clientId)
+        return res.status(400).json({ error: 'É necessário víncular a Nf com um Client Id.' })
 
     next()
 }

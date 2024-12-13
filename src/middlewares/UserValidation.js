@@ -5,8 +5,8 @@ const UserValidation = async (req, res, next) => {
 
     if (!name)
         return res.status(400).json({ error: 'O Nome é de preenchimento obrigatório.' })
-    else if (!password)
-        return res.status(400).json({ error: 'A senha é de preenchimento obrigatório.' })
+    /*else if (!password)
+        return res.status(400).json({ error: 'A senha é de preenchimento obrigatório.' })*/
     else if (!email)
         return res.status(400).json({ error: 'O Email é de preenchimento obrigatório.' })
     else if (!user)

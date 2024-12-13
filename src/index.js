@@ -1,14 +1,22 @@
 const express = require('express')
-const cors = require("cors")
+const cors = require('cors')
 require('dotenv').config()
 
 const server = express()
+
+//Configura o express para trabalhar com cors e interpretar json
 server.use(cors())
 server.use(express.json())
 
 server.listen(process.env.PORT || 3000, () => {
     console.log("API ONLINE")
 })
+
+const AuthRoutes = require('./routes/AuthRouter')
+server.use('/auth', AuthRoutes)
+
+const SendMailRoutes = require('./routes/SendMailRouter')
+server.use('/mail', SendMailRoutes)
 
 const UserRoutes = require('./routes/UserRouter')
 server.use('/user', UserRoutes)
@@ -18,6 +26,9 @@ server.use('/material', MaterialRoutes)
 
 const ClientRoutes = require('./routes/ClientRouter')
 server.use('/client', ClientRoutes)
+
+const ContactRoutes = require('./routes/ContactRouter')
+server.use('/client-contact', ContactRoutes)
 
 const ProductRoutes = require('./routes/ProductRouter')
 server.use('/product', ProductRoutes)

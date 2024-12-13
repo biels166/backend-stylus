@@ -5,7 +5,7 @@ let connectionString = ""
 let connectionType = ""
 let succes_On_Create_Connection_String = false
 
-for (var i = 1; i <= 10; i++) {
+for (let i = 1; i <= 10; i++) {
     if (env.ENVCONFIG === "PRD") {
         connectionString = `mongodb+srv://${env.MONGO_DB_USER}:${env.MONGO_DB_SECRET}@${env.CLUSTER_STYLUS}`
         connectionType = "mongodb+srv"
