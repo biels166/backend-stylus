@@ -3,7 +3,7 @@ const NFModel = require('../model/NFModel')
 
 class NFController {
     async register(req, res) {
-        await new NFModel({...req.body})
+        await new NFModel({ ...req.body })
             .save()
             .then(response => {
                 return res.status(200).json({
@@ -24,7 +24,7 @@ class NFController {
             const pages = Math.ceil(total / rowsPage)
 
             const nfs = await NFModel.find({ clientId: { '$eq': clientId } })
-                .sort('date')
+                .sort({ date: -1 })
                 .skip((pageNumber * rowsPage))
                 .limit(rowsPage)
 

@@ -15,6 +15,9 @@ server.listen(process.env.PORT || 3000, () => {
 const AuthRoutes = require('./routes/AuthRouter')
 server.use('/auth', AuthRoutes)
 
+const TaskRoutes = require('./routes/TaskRouter')
+server.use('/task', TaskRoutes)
+
 const SendMailRoutes = require('./routes/SendMailRouter')
 server.use('/mail', SendMailRoutes)
 
