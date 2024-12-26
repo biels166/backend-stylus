@@ -24,6 +24,9 @@ server.use('/mail', SendMailRoutes)
 const UserRoutes = require('./routes/UserRouter')
 server.use('/user', UserRoutes)
 
+const CategoryRoutes = require('./routes/CategoryRouter')
+server.use('/category', CategoryRoutes)
+
 const MaterialRoutes = require('./routes/MaterialRouter')
 server.use('/material', MaterialRoutes)
 

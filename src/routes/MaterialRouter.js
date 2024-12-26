@@ -25,63 +25,21 @@ router.put('/:id',
     ]),
     MaterialController.updatePrincing)
 
-router.get('/',
-    CheckPrivateRouter([
-        env.ADMINISTRADOR,
-        env.VISUALIZAR_MATERIAL
-    ]),
-    MaterialController.list)
-
-router.post('/filter/list',
+router.post('/listByFilter',
     CheckPrivateRouter([
         env.ADMINISTRADOR,
         env.VISUALIZAR_MATERIAL,
     ]),
-    MaterialController.getMaterialListByCustomFilter)
+    MaterialController.getMaterialListByFilter)
 
-router.get('/:id',
-    CheckPrivateRouter([
-        env.ADMINISTRADOR,
-        env.VISUALIZAR_MATERIAL,
-    ]),
-    MaterialController.getMaterialById)
-
-router.get('/filter/code',
-    CheckPrivateRouter([
-        env.ADMINISTRADOR,
-        env.VISUALIZAR_MATERIAL,
-    ]),
-    MaterialController.getMaterialByCode)
-
-router.get('/list/filter/materialCode',
-    CheckPrivateRouter([
-        env.ADMINISTRADOR,
-        env.VISUALIZAR_MATERIAL,
-    ]),
-    MaterialController.getMaterialListByCode)
-
-router.get('/filter/materialName',
-    CheckPrivateRouter([
-        env.ADMINISTRADOR,
-        env.VISUALIZAR_MATERIAL,
-    ]),
-    MaterialController.getMaterialByName)
-
-router.get('/list/optCodeMat',
+router.get('/list/codeMaterial',
     CheckPrivateRouter([
         env.ADMINISTRADOR,
         env.VISUALIZAR_MATERIAL,
     ]),
     MaterialController.listCodeMat)
 
-router.get('/list/optItemCode',
-    CheckPrivateRouter([
-        env.ADMINISTRADOR,
-        env.VISUALIZAR_MATERIAL,
-    ]),
-    MaterialController.listItemCode)
-
-router.get('/list/optType',
+router.get('/list/type',
     CheckPrivateRouter([
         env.ADMINISTRADOR,
         env.VISUALIZAR_MATERIAL,
