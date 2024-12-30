@@ -33,31 +33,31 @@ class ContactController {
         }
     }
 
-    async getContactsByClientId(req, res) {
-            const { clientId, pageNumber, rowsPage } = req.body
-    
-            try {
-                const total = await ContactModel.countDocuments({ clientId: { '$eq': clientId } })
-                const pages = Math.ceil(total / rowsPage)
-    
-                const contacts = await ContactModel.find({ clientId: { '$eq': clientId } })
-                    .sort('name')
-                    .skip((pageNumber * rowsPage))
-                    .limit(rowsPage)
-    
-                return await res.status(200).json({
-                    total,
-                    pages,
-                    contacts
-                })
-            }
-            catch (error) {
-                return res.status(500).json(error)
-            }
+    async getContactsByPersonId(req, res) {
+        const { personId, pageNumber, rowsPage } = req.body
+
+        try {
+            const total = await ContactModel.countDocuments({ personId: { '$eq': personId } })
+            const pages = Math.ceil(total / rowsPage)
+
+            const contacts = await ContactModel.find({ personId: { '$eq': personId } })
+                .sort('name')
+                .skip((pageNumber * rowsPage))
+                .limit(rowsPage)
+
+            return await res.status(200).json({
+                total,
+                pages,
+                contacts
+            })
+        }
+        catch (error) {
+            return res.status(500).json(error)
+        }
     }
 
     async delete(req, res) {
-       await ContactModel.findByIdAndDelete(req.params.id)
+        await ContactModel.findByIdAndDelete(req.params.id)
             .then(response => {
 
                 return res.status(200).json({ message: 'Contato removido com sucesso' })

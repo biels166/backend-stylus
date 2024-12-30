@@ -1,34 +1,25 @@
-const MaterialModel = require('../model/MaterialModel')
-
 const MaterialValidations = async (req, res, next) => {
-    if (!req.body.material)
-        return res.status(400).json({ error: 'O material é de preenchimento obrigatório.' })
-    else if (!req.body.referenceQtd)
-        return res.status(400).json({ error: 'A quantidade de referência é de preenchimento obrigatório.' })
-    else if (!req.body.referenceType)
-        return res.status(400).json({ error: 'O tipo de referência do material é de preenchimento obrigatório.' })
-    else if (!req.body.materialValue)
-        return res.status(400).json({ error: 'O valor pago no material é de preenchimento obrigatório.' })
-    else if (!req.body.quantity)
-        return res.status(400).json({ error: 'A quantidade de material útil é de preenchimento obrigatório.' })
-    else if (!req.body.format)
-        return res.status(400).json({ error: 'O formato do material é de preenchimento obrigatório.' })
-    else {
-        /*
-        let code = `${req.body.materialCode}.${req.body.itemCode}`
-        let existsCode = MaterialModel.findOne({'code': code})
-
-        if(existsCode)
-            return res.status(400).json({ error: 'Código já cadastrado.' })
-
-        let existsMaterial = MaterialModel.findOne({'material': {'$eq': req.body.material}})
-
-        if(existsMaterial)
-            return res.status(400).json({ error: 'Material já cadastrado.' })*/
+    if (!req.body.categoryId) {
+        return res.status(500).json({ error: 'O ID da categoria é obrigatório.' });
+    } else if (!req.body.itemId) {
+        return res.status(500).json({ error: 'O ID do item é obrigatório.' });
+    } else if (!req.body.quantity) {
+        return res.status(400).json({ error: 'A quantidade do material é obrigatória.' });
+    } else if (!req.body.quantityReference) {
+        return res.status(400).json({ error: 'A quantidade de referência é obrigatória.' });
+    } else if (!req.body.type) {
+        return res.status(400).json({ error: 'O tipo do material é obrigatório.' });
+    } else if (!req.body.typeReference) {
+        return res.status(400).json({ error: 'O tipo de referência é obrigatório.' });
+    } else if (!req.body.totalCost) {
+        return res.status(400).json({ error: 'O custo total do material é obrigatório.' });
+    } else if (!req.body.costPerItem) {
+        return res.status(400).json({ error: 'O custo por unidade é obrigatório.' });
+    } else if (!req.body.purchasedIn) {
+        return res.status(400).json({ error: 'A data de compra do material é obrigatória.' });
     }
-    
-        
+
     next()
 }
 
-module.exports = MaterialValidations;
+module.exports = MaterialValidations

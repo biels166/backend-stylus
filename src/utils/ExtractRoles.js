@@ -13,6 +13,10 @@ const ExtractRoles = (userRoles) => {
     if (list.includes('ADICIONAR CLIENTE')) roles.push(env.ADICIONAR_CLIENTE);
     if (list.includes('EDITAR CLIENTE')) roles.push(env.EDITAR_CLIENTE);
     if (list.includes('REMOVER CLIENTE')) roles.push(env.REMOVER_CLIENTE);
+    if (list.includes('VISUALIZAR PARCEIRO')) roles.push(env.VISUALIZAR_PARCEIRO);
+    if (list.includes('ADICIONAR PARCEIRO')) roles.push(env.ADICIONAR_PARCEIRO);
+    if (list.includes('EDITAR PARCEIRO')) roles.push(env.EDITAR_PARCEIRO);
+    if (list.includes('REMOVER PARCEIRO')) roles.push(env.REMOVER_PARCEIRO);
     if (list.includes('VISUALIZAR PRODUTO')) roles.push(env.VISUALIZAR_PRODUTO);
     if (list.includes('ADICIONAR PRODUTO')) roles.push(env.ADICIONAR_PRODUTO);
     if (list.includes('EDITAR PRODUTO')) roles.push(env.EDITAR_PRODUTO);
@@ -29,7 +33,7 @@ const ExtractRoles = (userRoles) => {
     if (list.includes('ADICIONAR OS')) roles.push(env.ADICIONAR_OS);
     if (list.includes('EDITAR OS')) roles.push(env.EDITAR_OS);
     if (list.includes('REMOVER OS')) roles.push(env.REMOVER_OS);
-    
+
     return roles;
 };
 

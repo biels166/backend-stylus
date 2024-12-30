@@ -1,5 +1,3 @@
-const ClientModel = require('../model/ClientModel')
-
 const ClientValidation = async (req, res, next) => {
     if (!req.body.document)
         return res.status(400).json({ error: 'O Documento é de preenchimento obrigatório.' })
@@ -16,7 +14,7 @@ const ClientValidation = async (req, res, next) => {
     else if (!req.body.city)
         return res.status(400).json({ error: 'A Cidade é de preenchimento obrigatório.' })
     else if (!req.body.telephone && !req.body.cellphone)
-        return res.status(400).json({ error: 'Informe pelo menos um número para contato telefonico.' })
+        return res.status(400).json({ error: 'Informe pelo menos um número para contato telefônico.' })
     else {
         let docOnlyNumber = req.body.document.replace(/\D/g, '')
         let doclength = docOnlyNumber.length

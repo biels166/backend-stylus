@@ -4,25 +4,24 @@ const MaterialModel = require('../model/MaterialModel')
 class MaterialController {
     async register(req, res) {
         try {
-            const { materialValue, referenceQtd, quantity, materialCode } = req.body
+            const { itemId } = req.body
 
-            const db = await MaterialModel.find({ 'materialCode': materialCodee })
+            let batches = await MaterialModel.countDocuments({ itemId: itemId })
+            let batchCounter = batches + 1
 
-            let itemCode = db > 0 ? parseInt([db.length - 1].itemCode) + 1 : 1
+            let body = req.body
+            body = {
+                ...body,
+                batch: `${body.itemId.replace(".","")}${batchCounter.toString().padStart(3,"0")}`
+            }
 
-            const material = new MaterialModel({
-                ...req.body,
-                itemValue: materialValue / referenceQtd,
-                value: (materialValue / referenceQtd) / quantity,
-                itemCode,
-                code: `${materialCode}.${itemCode}`
-            })
+            const material = new MaterialModel(body)
             await material
                 .save()
                 .then(response => {
                     return res.status(200).json({
                         material: response,
-                        msg: 'Insumo cadastrado com sucesso.'
+                        msg: 'Registro da compra de material cadastrado com sucesso.'
                     })
                 })
                 .catch(error => {
@@ -73,7 +72,7 @@ class MaterialController {
     }
 
     async getMaterialListByFilter(req, res) {
-        const { material, materialCode, type, pageNumber, rowsPage} = req.body
+        const { material, materialCode, type, pageNumber, rowsPage } = req.body
         try {
             let filter = { _id: { '$ne': null } }
 
@@ -94,9 +93,9 @@ class MaterialController {
             const pages = Math.ceil(total / rowsPage)
 
             await MaterialModel.find(filter)
-            .sort('materialCode')
-            .skip((pageNumber * rowsPage))
-            .limit(rowsPage)
+                .sort('materialCode')
+                .skip((pageNumber * rowsPage))
+                .limit(rowsPage)
                 .then(response => {
                     if (response.length > 0) {
                         return res.status(200).json({

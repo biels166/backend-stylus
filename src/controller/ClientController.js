@@ -9,7 +9,7 @@ class ClientController {
             .save()
             .then(response => {
                 return res.status(200).json({
-                    user: response,
+                    client: response,
                     msg: 'Cliente cadastrado com sucesso.'
                 })
             })
@@ -20,7 +20,7 @@ class ClientController {
 
     async update(req, res) {
         try {
-            await ClientModel.findByIdAndUpdate({ '_id': req.params.id }, req.body, { new: true }, '-password')
+            await ClientModel.findByIdAndUpdate({ '_id': req.params.id }, req.body, { new: true })
                 .then(response => {
                     return res.status(200).json({
                         client: response,

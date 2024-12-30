@@ -47,43 +47,47 @@ class TaskController {
     }
 
     async list(req, res) {
-        console.log(req)
         const { userId, pageNumber, rowsPage, type, status, dateFilter } = req.body
 
-        let filter = { userId: { '$eq': userId } }
+        let filter = {
+            _id: { '$ne': null },
+            userId: { '$eq': userId }
+        }
 
-        if (type !== null && type !== '' && type !== undefined)
+        if (type)
             filter = { ...filter, type: { '$eq': type } }
 
-        if (status)
-            filter = { ...filter, status: { '$eq': status } }
+        /*
+            { description: 'Em Andamento', value: 1 },
+            { description: 'Concluídas', value: 2 },
+            { description: 'Todas', value: 3 }
+        */
+        if (status && status !== 3)
+            filter = { ...filter, status: { '$eq': status === 2 } }
 
-        if (dateFilter) {
-            switch (dateFilter) {
-                case 'today':
-                    filter = { ...filter, date: { '$gte': startOfDay(currentDate), '$lt': endOfDay(currentDate) } }
-                    break
+        switch (dateFilter) {
+            case 'today':
+                filter = { ...filter, date: { '$gte': startOfDay(currentDate), '$lt': endOfDay(currentDate) } }
+                break
 
-                case 'week':
-                    filter = { ...filter, date: { '$gte': startOfWeek(currentDate), '$lt': endOfWeek(currentDate) } }
-                    break
+            case 'week':
+                filter = { ...filter, date: { '$gte': startOfWeek(currentDate), '$lt': endOfWeek(currentDate) } }
+                break
 
-                case 'month':
-                    filter = { ...filter, date: { '$gte': startOfMonth(currentDate), '$lt': endOfMonth(currentDate) } }
-                    break
+            case 'month':
+                filter = { ...filter, date: { '$gte': startOfMonth(currentDate), '$lt': endOfMonth(currentDate) } }
+                break
 
-                case 'late':
-                    filter = { ...filter, date: { '$lt': currentDate }, status: { '$eq': false} }
-                    break
+            case 'late':
+                filter = { ...filter, date: { '$lt': currentDate }, status: { '$eq': false } }
+                break
 
-                default:
-                    filter = { ...filter, date: { '$gte': startOfWeek(currentDate), '$lt': endOfWeek(currentDate) } }
-                    break
-            }
+            default:
+                filter = { ...filter }
+                break
         }
-        else {
-            filter = { ...filter, date: { '$gte': startOfDay(currentDate), '$lt': endOfDay(currentDate) } }
-        }
+
+        console.log("filter", filter)
 
         try {
             const total = await TaskModel.countDocuments(filter)

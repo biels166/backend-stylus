@@ -33,8 +33,11 @@ server.use('/material', MaterialRoutes)
 const ClientRoutes = require('./routes/ClientRouter')
 server.use('/client', ClientRoutes)
 
+const PartnerRoutes = require('./routes/PartnerRouter')
+server.use('/partner', PartnerRoutes)
+
 const ContactRoutes = require('./routes/ContactRouter')
-server.use('/client-contact', ContactRoutes)
+server.use('/contacts', ContactRoutes)
 
 const ProductRoutes = require('./routes/ProductRouter')
 server.use('/product', ProductRoutes)

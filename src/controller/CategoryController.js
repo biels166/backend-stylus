@@ -26,6 +26,7 @@ class CategoryController {
 
     async listCategories(req, res) {
         await CategoryModel.find({ _id: { '$ne': null } })
+            .sort('code')
             .then(response => {
                 return res.status(200).json({
                     options: response
@@ -94,7 +95,7 @@ class CategoryController {
             })
     }
 
-    async getItensByCategory(req, res) {
+    async listItensByCategory(req, res) {
         const { categoryCode, pageNumber, rowsPage } = req.body
         try {
             let filter = { _id: { '$ne': null } }
@@ -125,6 +126,53 @@ class CategoryController {
         catch (error) {
             return res.status(522).json({ error: 'Ocorreu um erro inesperado.' })
         }
+    }
+
+    async getItensByCategory(req, res) {
+        let options = {}
+
+        options = req.body.map(code => ({
+            ...options,
+            'categoryCode': code
+        }))
+
+        try {
+            let filter = { $or: [...options] }
+
+            const total = await ItemCategoryModel.countDocuments(filter)
+            const pages = 1
+
+            await ItemCategoryModel.find(filter)
+                .sort('itemCode')
+                .then(response => {
+                    return res.status(200).json({
+                        total,
+                        pages,
+                        itens: response
+                    })
+                })
+                .catch(error => {
+                    return res.status(500).json(error)
+                })
+        }
+        catch (error) {
+            return res.status(522).json({ error: 'Ocorreu um erro inesperado.' })
+        }
+    }
+
+    async getByItemCode(req, res) {
+        await ItemCategoryModel.find({itemCode: req.params.itemCode})
+            .then(async response => {
+                if (response) {
+                    return res.status(200).json(response[0])
+                }
+                else {
+                    return res.status(404).json({ error: 'Item não encontrado' })
+                }
+            })
+            .catch(error => {
+                return res.status(500).json(error)
+            })
     }
 }
 

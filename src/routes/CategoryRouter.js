@@ -54,6 +54,20 @@ router.post('/listItemByCategory',
         env.ADMINISTRADOR,
         env.VISUALIZAR_MATERIAL,
     ]),
+    CategoryController.listItensByCategory)
+
+router.post('/getItemByCategory',
+    CheckPrivateRouter([
+        env.ADMINISTRADOR,
+        env.VISUALIZAR_MATERIAL,
+    ]),
     CategoryController.getItensByCategory)
+
+router.get('/item/:itemCode',
+    CheckPrivateRouter([
+        env.ADMINISTRADOR,
+        env.VISUALIZAR_MATERIAL,
+    ]),
+    CategoryController.getByItemCode)
 
 module.exports = router

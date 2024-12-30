@@ -7,7 +7,7 @@ const ContactSchema = new Schema({
     email: {type: String},
     telephone: {type: String},
     cellphone: {type: String},
-    clientId: {type: String, required: true},
+    personId: {type: String, required: true},
 })
 
 module.exports = mongoose.model('Contact', ContactSchema)

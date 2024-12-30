@@ -19,6 +19,14 @@ async function ProtectRoles(userRoles = []) {
             { description: 'REMOVER CLIENTE', value: userRoles.includes(env.REMOVER_CLIENTE), category: 'cliente' }
         );
 
+    if (userRoles.some(role => role.includes('_PARTNER')))
+        roles.push(
+            { description: 'VISUALIZAR PARCEIRO', value: userRoles.includes(env.VISUALIZAR_PARCEIRO), category: 'parceiro' },
+            { description: 'ADICIONAR PARCEIRO', value: userRoles.includes(env.ADICIONAR_PARCEIRO), category: 'parceiro' },
+            { description: 'EDITAR PARCEIRO', value: userRoles.includes(env.EDITAR_PARCEIRO), category: 'parceiro' },
+            { description: 'REMOVER PARCEIRO', value: userRoles.includes(env.REMOVER_PARCEIRO), category: 'parceiro' }
+        );
+
     if (userRoles.some(role => role.includes('_PRODUCT')))
         roles.push(
             { description: 'VISUALIZAR PRODUTO', value: userRoles.includes(env.VISUALIZAR_PRODUTO), category: 'produto' },

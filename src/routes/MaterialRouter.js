@@ -12,8 +12,7 @@ router.post('/',
         env.ADMINISTRADOR,
         env.VISUALIZAR_MATERIAL,
         env.ADICIONAR_MATERIAL
-    ])
-    , 
+    ]), 
     MaterialController.register)
 
 router.put('/:id',

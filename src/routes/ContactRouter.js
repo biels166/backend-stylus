@@ -11,8 +11,9 @@ router.post('/',
         env.ADMINISTRADOR,
         env.VISUALIZAR_CLIENTE,
         env.ADICIONAR_CLIENTE
-    ]), 
+    ]),
     ContactController.register)
+
 
 router.put('/:id',
     ContactValidation,
@@ -23,12 +24,14 @@ router.put('/:id',
     ]),
     ContactController.update)
 
+
+
 router.post('/list',
     CheckPrivateRouter([
         env.ADMINISTRADOR,
         env.VISUALIZAR_CLIENTE,
     ]),
-    ContactController.getContactsByClientId)
+    ContactController.getContactsByPersonId)
 
 router.delete('/:id',
     CheckPrivateRouter([
