@@ -1,7 +1,6 @@
 const CategoryModel = require("../model/CategoryModel")
 const ItemCategoryModel = require("../model/ItemCategoryModel")
 
-
 class CategoryController {
     async register(req, res) {
         const { name, code } = req.body
@@ -160,8 +159,46 @@ class CategoryController {
         }
     }
 
+    async getAllSupplierItens(req, res) {
+        try {
+            const supplierCategories = await CategoryModel.find(
+                {
+                    _id: { '$ne': null },
+                    isMaterialCategory: true
+                }
+            ).sort('code')
+
+            let options = {}
+
+            options = supplierCategories.map(category => ({
+                ...options,
+                'categoryCode': category.code
+            }))
+
+            let filter = { $or: [...options] }
+
+            const total = await ItemCategoryModel.countDocuments(filter)
+            const pages = 1
+
+            await ItemCategoryModel.find(filter)
+                .sort('itemCode')
+                .then(response => {
+                    return res.status(200).json({
+                        total,
+                        pages,
+                        itens: response
+                    })
+                })
+                .catch(error => {
+                    return res.status(500).json(error)
+                })
+        }
+        catch (error) {
+            return res.status(522).json({ error: 'Ocorreu um erro inesperado.' })
+        }
+    }
     async getByItemCode(req, res) {
-        await ItemCategoryModel.find({itemCode: req.params.itemCode})
+        await ItemCategoryModel.find({ itemCode: req.params.itemCode })
             .then(async response => {
                 if (response) {
                     return res.status(200).json(response[0])

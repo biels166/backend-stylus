@@ -1,22 +1,59 @@
 const { model } = require('mongoose')
 const MaterialModel = require('../model/MaterialModel')
+const BatchMaterialModel = require('../model/BatchMaterialModel')
 
 class MaterialController {
     async register(req, res) {
         try {
-            const { itemId } = req.body
+            const { itemId, categoryId, quantity, quantityReference } = req.body
+            let body = req.body
 
             let batches = await MaterialModel.countDocuments({ itemId: itemId })
             let batchCounter = batches + 1
+            let newBatch = `${body.itemId.replace(".", "")}${batchCounter.toString().padStart(3, "0")}`
+            
+            //Criando lote
+            let totalQuantity = 0
+            switch (categoryId.toString()) {
+                case '100':
+                    totalQuantity = quantityReference * quantity * 8
+                    break;
 
-            let body = req.body
-            body = {
-                ...body,
-                batch: `${body.itemId.replace(".","")}${batchCounter.toString().padStart(3,"0")}`
+                case '200':
+                case '400':
+                    totalQuantity = quantityReference * quantity
+                    break;
+
+                case '300':
+                    totalQuantity = quantity
+                    break;
+
+                default:
+                    totalQuantity = quantity
+                    break;
+            }
+            
+            let batchBody = {
+                batch: newBatch,
+                quantity: totalQuantity,
+                reserved: 0,
+                consumed: 0,
+                total: totalQuantity,
+                itemId: itemId
             }
 
-            const material = new MaterialModel(body)
-            await material
+            console.log('batchBody', batchBody)
+
+            const batch = await new BatchMaterialModel(batchBody).save()
+
+            console.log('batch', batch)
+
+            body = {
+                ...body,
+                batch: newBatch
+            }
+
+            await new MaterialModel(body)
                 .save()
                 .then(response => {
                     return res.status(200).json({
@@ -29,6 +66,7 @@ class MaterialController {
                 })
         }
         catch (error) {
+            console.log('erro ao criar lote', error)
             return res.status(522).json({ error: 'Ocorreu um erro inesperado.' })
         }
     }
@@ -72,9 +110,13 @@ class MaterialController {
     }
 
     async getMaterialListByFilter(req, res) {
-        const { material, materialCode, type, pageNumber, rowsPage } = req.body
+        const { material, materialCode, type, itemId, pageNumber, rowsPage } = req.body
         try {
             let filter = { _id: { '$ne': null } }
+
+            if (itemId) {
+                filter = { ...filter, itemId: itemId } 
+            }
 
             if (material) {
                 filter = { ...filter, material: { $regex: material, $options: 'i' } }
@@ -93,7 +135,7 @@ class MaterialController {
             const pages = Math.ceil(total / rowsPage)
 
             await MaterialModel.find(filter)
-                .sort('materialCode')
+                .sort('itemId')
                 .skip((pageNumber * rowsPage))
                 .limit(rowsPage)
                 .then(response => {
@@ -113,6 +155,7 @@ class MaterialController {
                 })
         }
         catch (error) {
+            console.log(error)
             return res.status(522).json({ error: 'Ocorreu um erro inesperado.' })
         }
     }

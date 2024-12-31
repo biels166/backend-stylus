@@ -12,7 +12,7 @@ router.post('/',
         env.ADMINISTRADOR,
         env.VISUALIZAR_MATERIAL,
         env.ADICIONAR_MATERIAL
-    ]), 
+    ]),
     MaterialController.register)
 
 router.put('/:id',
@@ -45,12 +45,12 @@ router.get('/list/type',
     ]),
     MaterialController.listType)
 
-    router.delete('/:id',
-        CheckPrivateRouter([
-            env.ADMINISTRADOR,
-            env.VISUALIZAR_MATERIAL,
-            env.REMOVER_MATERIAL,
-        ])
-        , MaterialController.delete)
-        
+router.delete('/:id',
+    CheckPrivateRouter([
+        env.ADMINISTRADOR,
+        env.VISUALIZAR_MATERIAL,
+        env.REMOVER_MATERIAL,
+    ]),
+    MaterialController.delete)
+
 module.exports = router

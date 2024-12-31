@@ -30,6 +30,12 @@ server.use('/category', CategoryRoutes)
 const MaterialRoutes = require('./routes/MaterialRouter')
 server.use('/material', MaterialRoutes)
 
+const StockControlRoutes = require('./routes/StockRouter')
+server.use('/stockControl', StockControlRoutes)
+
+const BatchRoutes = require('./routes/BatchMaterialRouter')
+server.use('/batch', BatchRoutes)
+
 const ClientRoutes = require('./routes/ClientRouter')
 server.use('/client', ClientRoutes)
 

@@ -63,6 +63,13 @@ router.post('/getItemByCategory',
     ]),
     CategoryController.getItensByCategory)
 
+router.get('/listAllSupplierItens',
+    CheckPrivateRouter([
+        env.ADMINISTRADOR,
+        env.VISUALIZAR_MATERIAL,
+    ]),
+    CategoryController.getAllSupplierItens)
+
 router.get('/item/:itemCode',
     CheckPrivateRouter([
         env.ADMINISTRADOR,
