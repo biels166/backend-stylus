@@ -6,6 +6,7 @@ const ItemCategoryModel = new Schema({
     code: {type: Number},
     itemCode:  {type: String},
     categoryCode: {type: Number, required: true},
+    batches:  {type: String},
 })
 
 module.exports = mongoose.model('ItemCategory', ItemCategoryModel)

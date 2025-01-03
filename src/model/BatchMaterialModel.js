@@ -3,10 +3,11 @@ const Schema = mongoose.Schema
 
 const BatchMaterialModel = new Schema({
     batch: {type: String, required: true},
-    quantity: {type: Number, required: true},
+    total: {type: Number, required: true},
     reserved: {type: Number},
+    using: {type: Number},
     consumed: {type: Number},
-    total: {type: Number},
+    available: {type: Number},
     itemId: {type: String}
 })
 

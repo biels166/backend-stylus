@@ -17,7 +17,17 @@ class BatchController {
     }
 
     async listBatchesOptions(req, res) {
-        await BatchMaterialModel.find({ _id: { '$ne': null } })
+        const {itemCode} = req.body
+
+        let filter = { _id: { '$ne': null } }
+
+        if (itemCode) {
+            filter = {...filter, itemId: itemCode}
+        }
+
+        console.log(filter)
+
+        await BatchMaterialModel.find(filter)
             .sort('batch')
             .then(async response => {
                 console.log(response)

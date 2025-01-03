@@ -4,30 +4,53 @@ const CategoryModel = require("../model/CategoryModel")
 
 class StockController {
     async listStockControl(req, res) {
+        const { itemId, pageNumber, rowsPage } = req.body
+
+        console.log('filtro recebido', req.body)
+
         try {
             //Obtendo os itens das categorias de materiais
-            const supplierCategories = await CategoryModel
-                .find({ _id: { '$ne': null }, isMaterialCategory: true }).sort('code')
+            let materialFilter = { _id: { '$ne': null }, isMaterialCategory: true }
 
-            let options = {}
+            if (itemId) {
+                materialFilter = { ...materialFilter, code: itemId?.split(".")[0] }
+            }
 
-            options = supplierCategories.map(category => ({
-                ...options,
-                'categoryCode': category.code
-            }))
+            const materialCategories = await CategoryModel
+                .find(materialFilter).sort('code')
 
-            const total = await ItemCategoryModel
-            .countDocuments({ $or: [...options] }).sort('itemCode')
-            const pages = 1
+            let filterItem = { _id: { '$ne': null } }
 
-            const itens = await ItemCategoryModel
-                .find({ $or: [...options] }).sort('itemCode')
+            if (itemId) {
+                filterItem = { ...filterItem, itemCode: itemId }
+            }
+            else {
+                let options = {}
 
-            console.log(itens)
+                options = materialCategories.map(category => ({
+                    ...options,
+                    'categoryCode': category.code
+                }))
+
+                filterItem = { $or: [...options] }
+            }
 
             //obtendo lotes
+            let filterBatch = { _id: { '$ne': null } }
+
             const batches = await BatchMaterialModel
-                .find({ _id: { '$ne': null } }).sort('batch')
+                .find(filterBatch).sort('batch')
+
+            const total = await ItemCategoryModel
+                .countDocuments(filterItem).sort('itemCode')
+
+            const pages = Math.ceil(total / rowsPage)
+
+            const itens = await ItemCategoryModel
+                .find(filterItem)
+                .sort('itemCode')
+                .skip((pageNumber * rowsPage))
+                .limit(rowsPage)
 
             //agrupando os lotes por item
             let stockControl = []
@@ -35,14 +58,18 @@ class StockController {
             stockControl = itens.map(item => ({
                 description: `${item.itemCode} - ${item.name}`,
                 itemCode: item.itemCode,
+                categoryCode: parseInt(item.itemCode.split(".")[0]),
                 name: item.name,
                 counterBatches: batches?.filter(b => b.itemId === item.itemCode).length,
-                quantityConsumed: batches?.filter(b => b.itemId === item.itemCode).reduce((accumulator, b) => accumulator + b.consumed, 0),
+                quantityPurcashed: batches?.filter(b => b.itemId === item.itemCode).reduce((accumulator, b) => accumulator + b.total, 0),
                 quantityReserved: batches?.filter(b => b.itemId === item.itemCode).reduce((accumulator, b) => accumulator + b.reserved, 0),
-                quantityAvailable: batches?.filter(b => b.itemId === item.itemCode).reduce((accumulator, b) => accumulator + b.total, 0)
+                quantityUsing: batches?.filter(b => b.itemId === item.itemCode).reduce((accumulator, b) => accumulator + b.using, 0),
+                quantityConsumed: batches?.filter(b => b.itemId === item.itemCode).reduce((accumulator, b) => accumulator + b.consumed, 0),
+                quantityAvailable: batches?.filter(b => b.itemId === item.itemCode).reduce((accumulator, b) => accumulator + b.available, 0)
             }))
 
-        //    stockControl = stockControl.filter(s => s.counterBatches > 0)
+
+            //    stockControl = stockControl.filter(s => s.counterBatches > 0)
 
             return res.status(200).json({
                 total,

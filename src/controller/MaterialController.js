@@ -1,6 +1,7 @@
 const { model } = require('mongoose')
 const MaterialModel = require('../model/MaterialModel')
 const BatchMaterialModel = require('../model/BatchMaterialModel')
+const ItemCategoryModel = require('../model/ItemCategoryModel')
 
 class MaterialController {
     async register(req, res) {
@@ -11,7 +12,7 @@ class MaterialController {
             let batches = await MaterialModel.countDocuments({ itemId: itemId })
             let batchCounter = batches + 1
             let newBatch = `${body.itemId.replace(".", "")}${batchCounter.toString().padStart(3, "0")}`
-            
+
             //Criando lote
             let totalQuantity = 0
             switch (categoryId.toString()) {
@@ -32,21 +33,29 @@ class MaterialController {
                     totalQuantity = quantity
                     break;
             }
-            
-            let batchBody = {
+
+            await new BatchMaterialModel({
                 batch: newBatch,
-                quantity: totalQuantity,
+                total: totalQuantity,
+                using: 0,
                 reserved: 0,
                 consumed: 0,
-                total: totalQuantity,
+                available: totalQuantity,
                 itemId: itemId
+            }).save()
+
+            //vínculando lote ao item para performance de filtro
+
+            let item = await ItemCategoryModel.find({ itemCode: itemId })
+            item = item[0]
+
+            if (!item.batches) item = { ...item, batches: newBatch }
+            else {
+                let newString = `${item.batch} ${newBatch}`
+                item = { ...item, batches: newString }
             }
 
-            console.log('batchBody', batchBody)
-
-            const batch = await new BatchMaterialModel(batchBody).save()
-
-            console.log('batch', batch)
+            await ItemCategoryModel.updateOne({ ...item }, { new: true })
 
             body = {
                 ...body,
@@ -110,24 +119,20 @@ class MaterialController {
     }
 
     async getMaterialListByFilter(req, res) {
-        const { material, materialCode, type, itemId, pageNumber, rowsPage } = req.body
+        const { supplierId, itemId, batch, pageNumber, rowsPage } = req.body
         try {
             let filter = { _id: { '$ne': null } }
 
             if (itemId) {
-                filter = { ...filter, itemId: itemId } 
+                filter = { ...filter, itemId: itemId }
             }
 
-            if (material) {
-                filter = { ...filter, material: { $regex: material, $options: 'i' } }
+            if (supplierId) {
+                filter = { ...filter, supplierId: supplierId }
             }
 
-            if (materialCode) {
-                filter = { ...filter, materialCode: { 'eq': materialCode } }
-            }
-
-            if (type) {
-                filter = { ...filter, type: { 'eq': type } }
+            if (batch) {
+                filter = { ...filter, batch: { $regex: batch, $options: 'i' } }
             }
 
             const total = await MaterialModel.countDocuments(filter)
