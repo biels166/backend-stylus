@@ -6,7 +6,7 @@ const ItemCategoryModel = require('../model/ItemCategoryModel')
 class MaterialController {
     async register(req, res) {
         try {
-            const { itemId, categoryId, quantity, quantityReference } = req.body
+            const { itemId, categoryId, quantity, quantityReference, costPerItem, totalCost } = req.body
             let body = req.body
 
             let batches = await MaterialModel.countDocuments({ itemId: itemId })
@@ -41,6 +41,8 @@ class MaterialController {
                 reserved: 0,
                 consumed: 0,
                 available: totalQuantity,
+                costPerItem: costPerItem,
+                totalCost: totalCost,
                 itemId: itemId
             }).save()
 

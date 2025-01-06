@@ -70,6 +70,13 @@ router.get('/listAllSupplierItens',
     ]),
     CategoryController.getAllSupplierItens)
 
+router.get('/listAllOutsourcedItens',
+    CheckPrivateRouter([
+        env.ADMINISTRADOR,
+        env.VISUALIZAR_MATERIAL,
+    ]),
+    CategoryController.getAllOutsourcedItens)
+
 router.get('/item/:itemCode',
     CheckPrivateRouter([
         env.ADMINISTRADOR,

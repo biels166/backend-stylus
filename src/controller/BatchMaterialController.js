@@ -25,8 +25,6 @@ class BatchController {
             filter = {...filter, itemId: itemCode}
         }
 
-        console.log(filter)
-
         await BatchMaterialModel.find(filter)
             .sort('batch')
             .then(async response => {

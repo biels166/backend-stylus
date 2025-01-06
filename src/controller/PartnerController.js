@@ -138,6 +138,32 @@ class PartnerController {
         }
     }
 
+    async getOutsourced(req, res) {
+        let filter = {
+            _id: { '$ne': null },
+            isOutsourced: { '$eq': true },
+            categories: { $regex: req.params.category, $options: 'i' }
+        }
+
+        try {
+            const total = await PartnerModel.countDocuments(filter)
+
+            const pages = 1
+
+            const partners = await PartnerModel.find(filter)
+                .sort('name')
+
+            return await res.status(200).json({
+                total,
+                pages,
+                partners
+            })
+        }
+        catch (error) {
+            return res.status(500).json(error)
+        }
+    }
+
     async registerOffered(req, res) {
         await new OfferedModel({ ...req.body })
             .save()
@@ -171,9 +197,17 @@ class PartnerController {
     }
 
     async listOffered(req, res) {
-        const { partnerId, pageNumber, rowsPage } = req.body
+        const { partnerId, name, pageNumber, rowsPage } = req.body
 
-        let filter = { partnerId: { '$eq': partnerId } }
+        let filter = { _id: { '$ne': null } }
+
+        if (partnerId) {
+            filter = {...filter, partnerId: { '$eq': partnerId }}
+        }
+
+        if (name) {
+            filter = {...filter, name: { '$eq': name }}
+        }
 
         try {
             const total = await OfferedModel.countDocuments(filter)

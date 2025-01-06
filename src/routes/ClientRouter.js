@@ -52,4 +52,11 @@ router.delete('/:id',
     ]),
     ClientController.delete)
 
+router.post('/listAllClients',
+    CheckPrivateRouter([
+        env.ADMINISTRADOR,
+        env.ADICIONAR_COTACAO,
+    ]),
+    ClientController.listAllClients)
+
 module.exports = router

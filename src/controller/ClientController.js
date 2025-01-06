@@ -59,6 +59,20 @@ class ClientController {
         }
     }
 
+    async listAllClients(req, res) {
+        try {
+            const clients = await ClientModel.find({ _id: { '$ne': null } })
+                .sort('name')
+
+            return await res.status(200).json({
+                clients
+            })
+        }
+        catch (error) {
+            return res.status(500).json(error)
+        }
+    }
+
     async getClientById(req, res) {
         await ClientModel.findById(req.params.id)
             .then(async response => {
@@ -102,18 +116,18 @@ class ClientController {
     }
 
     async delete(req, res) {
-        const {id} = req.params
+        const { id } = req.params
         await ClientModel.findByIdAndDelete(id)
-        .then(async response => {
-            await ContactModel.deleteMany({ clientId: { '$eq': id } })
-            await NFModel.deleteMany({ clientId: { '$eq': id } })
+            .then(async response => {
+                await ContactModel.deleteMany({ clientId: { '$eq': id } })
+                await NFModel.deleteMany({ clientId: { '$eq': id } })
 
-            return res.status(200).json({ message: 'Cliente removido com sucesso' })
-        })
-        .catch(error => {
-            return res.status(500).json(error)
-        })
-}
+                return res.status(200).json({ message: 'Cliente removido com sucesso' })
+            })
+            .catch(error => {
+                return res.status(500).json(error)
+            })
+    }
 }
 
 module.exports = new ClientController()

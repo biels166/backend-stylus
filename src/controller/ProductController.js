@@ -3,11 +3,13 @@ const ProductModel = require('../model/ProductModel')
 
 class ProductController {
     async register(req, res) {
-        const product = new ProductModel(req.body)
-        await product
+        await new ProductModel(req.body)
             .save()
             .then(response => {
-                return res.status(200).json(response)
+                return res.status(200).json({
+                    product: response,
+                    msg: 'Produto cadastrado com sucesso.'
+                })
             })
             .catch(error => {
                 return res.status(500).json(error)
@@ -33,6 +35,40 @@ class ProductController {
             .catch(error => {
                 return res.status(500).json(error)
             })
+    }
+
+    async listAllProducts(req, res) {
+        try {
+            const products = await ProductModel.find({
+                 _id: { '$ne': null } ,
+                 isProduct: true
+                })
+                .sort('product')
+
+            return await res.status(200).json({
+                products
+            })
+        }
+        catch (error) {
+            return res.status(500).json(error)
+        }
+    }
+
+    async listAllServices(req, res) {
+        try {
+            const services = await ProductModel.find({
+                 _id: { '$ne': null } ,
+                 isProduct: false
+                })
+                .sort('product')
+
+            return await res.status(200).json({
+                services
+            })
+        }
+        catch (error) {
+            return res.status(500).json(error)
+        }
     }
 
     async getProductById(req, res) {

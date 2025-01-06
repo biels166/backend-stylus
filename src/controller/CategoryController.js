@@ -108,7 +108,7 @@ class CategoryController {
             const pages = Math.ceil(total / rowsPage)
 
             await ItemCategoryModel.find(filter)
-                .sort('itemCode')
+                .sort({ categoryCode: 1, code: 1 })
                 .skip((pageNumber * rowsPage))
                 .limit(rowsPage)
                 .then(response => {
@@ -197,6 +197,46 @@ class CategoryController {
             return res.status(522).json({ error: 'Ocorreu um erro inesperado.' })
         }
     }
+
+    async getAllOutsourcedItens(req, res) {
+        try {
+            const outsourcedCategories = await CategoryModel.find(
+                {
+                    _id: { '$ne': null },
+                    isMaterialCategory: false
+                }
+            ).sort('code')
+
+            let options = {}
+
+            options = outsourcedCategories.map(category => ({
+                ...options,
+                'categoryCode': category.code
+            }))
+
+            let filter = { $or: [...options] }
+
+            const total = await ItemCategoryModel.countDocuments(filter)
+            const pages = 1
+
+            await ItemCategoryModel.find(filter)
+                .sort('itemCode')
+                .then(response => {
+                    return res.status(200).json({
+                        total,
+                        pages,
+                        itens: response
+                    })
+                })
+                .catch(error => {
+                    return res.status(500).json(error)
+                })
+        }
+        catch (error) {
+            return res.status(522).json({ error: 'Ocorreu um erro inesperado.' })
+        }
+    }
+
     async getByItemCode(req, res) {
         await ItemCategoryModel.find({ itemCode: req.params.itemCode })
             .then(async response => {

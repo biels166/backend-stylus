@@ -8,6 +8,8 @@ const BatchMaterialModel = new Schema({
     using: {type: Number},
     consumed: {type: Number},
     available: {type: Number},
+    totalCost: {type: Number, required: true},
+    costPerItem: {type: Number, required: true},
     itemId: {type: String}
 })
 

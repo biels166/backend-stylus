@@ -52,4 +52,18 @@ router.delete('/:id',
     ]),
     ProductController.delete)
 
+router.post('/listAllProducts',
+    CheckPrivateRouter([
+        env.ADMINISTRADOR,
+        env.ADICIONAR_COTACAO,
+    ]),
+    ProductController.listAllProducts)
+
+router.post('/listAllServices',
+    CheckPrivateRouter([
+        env.ADMINISTRADOR,
+        env.ADICIONAR_COTACAO,
+    ]),
+    ProductController.listAllServices)
+
 module.exports = router

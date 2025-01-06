@@ -54,6 +54,13 @@ router.get('/suppliers/:category',
     ]),
     PartnerController.getSuppliers)
 
+router.get('/outsourced/:category',
+    CheckPrivateRouter([
+        env.ADMINISTRADOR,
+        env.ADICIONAR_COTACAO
+    ]),
+    PartnerController.getOutsourced)
+
 router.post('/offered/',
     OfferedValidation,
     CheckPrivateRouter([
