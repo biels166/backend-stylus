@@ -215,10 +215,8 @@ class DocumentController {
     </body>
     </html>`;
 
-        const chromePath = execSync('which google-chrome-stable').toString().trim()
+        const chromePath = '/usr/local/bin/google-chrome'
         
-        console.log('chromePath', chromePath)
-
         const browserConfig = !env.URLBASE?.includes('stylus') ? {} :
             {
                 executablePath: chromePath, // Caminho no Render
