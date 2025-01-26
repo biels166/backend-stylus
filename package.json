@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "postinstall": "npx puppeteer browsers install chrome"
+    "postinstall": "apt-get update && apt-get install -y chromium"
   },
   "keywords": [],
   "author": "Gabriel Santana",

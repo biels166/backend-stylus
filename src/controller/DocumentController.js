@@ -118,11 +118,11 @@ class DocumentController {
         </html>`;
 
         // Verifica se o ambiente já tem o Chromium instalado
-        execSync('rm -rf /opt/render/.cache/puppeteer');
+       // execSync('rm -rf /opt/render/.cache/puppeteer');
 
         const browserConfig = !env.URLBASE?.includes('stylus') ? {} :
             {
-                executablePath: '/usr/bin/chromium-browser', // Caminho do Chromium, conforme verificado acima
+                executablePath: '/usr/bin/chromium-browser',
                 args: ['--no-sandbox', '--disable-setuid-sandbox', '--headless'] // Flags necessárias
             };
 
