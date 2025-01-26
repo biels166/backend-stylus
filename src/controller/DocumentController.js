@@ -5,7 +5,6 @@ const { logo } = require("../constants/logoB64")
 const { formatValue, formatDate } = require("../utils/formatsjs")
 const { env } = require('node:process')
 const QuoteModel = require("../model/QuoteModel")
-const { getGridFSModel } = require('../model/GridFSBucketModel');
 const { mongoose } = require('../config/database')
 const { GridFSBucket } = require('mongodb');
 
@@ -138,7 +137,7 @@ class DocumentController {
             <img src=${logo} alt="Logo Stylus Encadernadora" title="Stylus Encadernadora">
             <div class="header-info">
                 <div><strong>Orçamento:</strong> ${number}</div>
-                <div><strong>Data do Orçamento:</strong> ${formatDate(new Date (updatedAt).getFullYear() < 2000 ? createdAt : updatedAt)}</div>
+                <div><strong>Data do Orçamento:</strong> ${formatDate(new Date(updatedAt).getFullYear() < 2000 ? createdAt : updatedAt)}</div>
                 <div><strong>Data de Entrega:</strong> ${formatDate(deliveryDate)}</div>
             </div>
         </div>
@@ -215,9 +214,16 @@ class DocumentController {
     </body>
     </html>`;
 
-        const browser = await puppeteer.launch();
-        const page = await browser.newPage();
-        await page.setContent(htmlContent);
+        const browserConfig = !env.URLBASE?.includes('stylus') ? {} :
+            {
+                executablePath: '/usr/bin/google-chrome-stable', // Caminho no Render
+                args: ['--no-sandbox', '--disable-setuid-sandbox']
+            } 
+
+        const browser = await puppeteer.launch(browserConfig)
+
+        const page = await browser.newPage()
+        await page.setContent(htmlContent)
 
         // Gerar o PDF em memória
         const pdfBuffer = await page.pdf({
@@ -232,11 +238,11 @@ class DocumentController {
         // Armazenar o PDF no GridFS
         const bucket = new GridFSBucket(mongoose.connection.db, { bucketName: 'pdfs' });
         const writeStream = bucket.openUploadStream(
-           docName,
-           {metadata: { id: number }}
+            docName,
+            { metadata: { id: number } }
         );
 
-        writeStream.end(pdfBuffer); // Finaliza o envio do buffer para o GridFS
+        writeStream.end(pdfBuffer);
 
         // Aguardar o evento de conclusão para pegar o fileId
         writeStream.on('finish', async () => {
