@@ -7,6 +7,7 @@ const { env } = require('node:process')
 const QuoteModel = require("../model/QuoteModel")
 const { mongoose } = require('../config/database')
 const { GridFSBucket } = require('mongodb');
+const { execSync } = require("node:child_process")
 
 class DocumentController {
     async generatePDF(req, res) {
@@ -214,11 +215,15 @@ class DocumentController {
     </body>
     </html>`;
 
+        const chromePath = execSync('which google-chrome-stable').toString().trim()
+        
+        console.log('chromePath', chromePath)
+
         const browserConfig = !env.URLBASE?.includes('stylus') ? {} :
             {
-                executablePath: '/usr/bin/google-chrome-stable', // Caminho no Render
+                executablePath: chromePath, // Caminho no Render
                 args: ['--no-sandbox', '--disable-setuid-sandbox']
-            } 
+            }
 
         const browser = await puppeteer.launch(browserConfig)
 
