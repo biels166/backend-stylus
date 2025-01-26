@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "apt-get update && apt-get install -y wget ca-certificates fonts-liberation libappindicator3-1 libxkbcommon0 libxss1 libasound2 libnspr4 libnss3 lsb-release xdg-utils && wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && dpkg -i google-chrome-stable_current_amd64.deb && apt-get install -f && node src/index.js",
-    "dev": "nodemon src/index.js"
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "postinstall": "npx puppeteer browsers install chrome"
   },
   "keywords": [],
   "author": "Gabriel Santana",
