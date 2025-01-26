@@ -24,7 +24,7 @@ class DocumentController {
             discount,
             totalWithRate
         } = req.body;
-    
+
         let htmlContent = `<html lang="pt-BR">
         <head>
             <meta charset="UTF-8">
@@ -70,31 +70,31 @@ class DocumentController {
         
             <!-- Produtos -->
             ${productList?.length > 0 ? (
-                    `<div class="section">
+                `<div class="section">
                     <div class="section-content">
                         <table class="table">
                             <tr><th>Produto</th><th>Quantidade</th></tr>
                             ${productList?.map(product =>
-                        `<tr><td>${product.product}</td><td>${product.quantity}</td></tr>`).join('')}      
+                    `<tr><td>${product.product}</td><td>${product.quantity}</td></tr>`).join('')}      
                         </table>
                         <h4 class="subTotal"> SubTotal: ${formatValue(productsValue + materialsCost)}</h4>
                     </div>
-                </div>` 
-                ) : ''}
+                </div>`
+            ) : ''}
     
             <!-- Serviços -->
             ${serviceList?.length > 0 ? (
-                    `<div class="section">
+                `<div class="section">
                     <div class="section-content">
                         <table class="table">
                             <tr><th>Serviços</th><th>Quantidade</th></tr>
                             ${serviceList?.map(service =>
-                        `<tr><td>${service.product}</td><td>${service.quantity}</td></tr>`).join('')}      
+                    `<tr><td>${service.product}</td><td>${service.quantity}</td></tr>`).join('')}      
                         </table>
                         <h4 class="subTotal"> SubTotal: ${formatValue(servicesValue + partnerServicesCost)}</h4>
                     </div>
                 </div>`
-                ) : ''}
+            ) : ''}
     
             <!-- Taxas e Descontos -->
             <div class="section">
@@ -116,38 +116,41 @@ class DocumentController {
         
         </body>
         </html>`;
-    
+
         // Verifica se o ambiente já tem o Chromium instalado
+        execSync('rm -rf /opt/render/.cache/puppeteer');
+
         const browserConfig = !env.URLBASE?.includes('stylus') ? {} :
             {
-                args: ['--no-sandbox', '--disable-setuid-sandbox']
+                executablePath: '/usr/bin/chromium-browser', // Caminho do Chromium, conforme verificado acima
+                args: ['--no-sandbox', '--disable-setuid-sandbox', '--headless'] // Flags necessárias
             };
-    
+
         const browser = await puppeteer.launch(browserConfig); // Usa o Chromium padrão do Puppeteer
-    
+
         const page = await browser.newPage();
         await page.setContent(htmlContent);
-    
+
         // Gerar o PDF em memória
         const pdfBuffer = await page.pdf({
             format: 'A4',
             printBackground: true,
         });
-    
+
         await browser.close();
-    
+
         // Nome do arquivo
         const docName = `Orçamento_${number}.pdf`;
-    
+
         // Armazenar o PDF no GridFS
         const bucket = new GridFSBucket(mongoose.connection.db, { bucketName: 'pdfs' });
         const writeStream = bucket.openUploadStream(
             docName,
             { metadata: { id: number } }
         );
-    
+
         writeStream.end(pdfBuffer);
-    
+
         // Aguardar o evento de conclusão para pegar o fileId
         writeStream.on('finish', async () => {
             // Atualiza o orçamento com o link para o PDF
@@ -158,22 +161,22 @@ class DocumentController {
                 budgetDocId: number,
                 __v: 0
             };
-    
+
             await QuoteModel.findOneAndUpdate({ number: number }, body, { new: true });
-    
+
             return res.status(200).json({
                 url: url,
                 docId: number,
                 msg: `Orçamento ${number} gerado com sucesso`
             });
         });
-    
+
         writeStream.on('error', (err) => {
             console.error('Erro ao armazenar PDF: ', err);
             return res.status(500).json({ msg: 'Erro ao gerar orçamento' });
         });
     }
-    
+
 
     async downloadPDF(req, res) {
         const { id } = req.params
