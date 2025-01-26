@@ -1,13 +1,5 @@
-const mongoose = require('../config/database')
+const { mongoose } = require('../config/database')
 const Schema = mongoose.Schema
-/*
-const RolesSchema = new Schema({
-    value: { type: String },
-    description: { type: String },
-    application: { type: String },
-    enable: { type: Boolean }
-})
-*/
 
 const UserSchema = new Schema({
     name: { type: String, required: true },

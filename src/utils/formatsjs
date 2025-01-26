@@ -1,0 +1,10 @@
+export const formatDate = (date = new Date()) => {
+    let dt = new Date(date)
+    dt.setHours(dt.getHours() - 3)
+
+    return dt.toLocaleDateString('pt-BR')
+}
+
+export const formatValue = (value = 0) => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+}

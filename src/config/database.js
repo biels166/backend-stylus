@@ -32,8 +32,20 @@ if (succes_On_Create_Connection_String) {
         .catch(erro => console.error("Erro ao conectar: ", erro))
 }
 else {
-    throw new Exception("Ocorreu um erro ao criar Connection String.")
+    throw new Error("Ocorreu um erro ao criar Connection String.")
 }
 
+async function connectDB() {
+    if (!succes_On_Create_Connection_String) {
+        throw new Error('Ocorreu um erro ao criar Connection String.');
+    }
 
-module.exports = mongoose
+    try {
+        console.log(`🟢 Conexão ${mongoose.connection.readyState} estabelecida com sucesso!`)
+    } catch (error) {
+        console.error('🔴 Erro ao conectar: ', error)
+        process.exit(1)
+    }
+}
+
+module.exports = {mongoose, connectDB}

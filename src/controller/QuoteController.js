@@ -1,146 +1,124 @@
-const { model } = require('mongoose')
 const QuoteModel = require('../model/QuoteModel')
-
+const ClientModel = require('../model/ClientModel')
+const { startOfDay, endOfDay } = require('date-fns')
+const BatchMaterialModel = require('../model/BatchMaterialModel')
+const currentDate = new Date()
 class QuoteController {
     async register(req, res) {
-        let date = new Date()
-        req.body.createdAt = date
+        const day = currentDate.getDate().toString().padStart(2, '0')
+        const month = (currentDate.getMonth() + 1).toString().padStart(2, '0')
+        const year = currentDate.getUTCFullYear().toString().slice(2)
 
-        let day = date.getDate().toString().padStart(2, '0')
-        let month = (date.getMonth() + 1).toString().padStart(2, '0')
-        let year = date.getUTCFullYear().toString().slice(2)
+        //Buscar cotações geradas hoje
+        let sequential = 1
+        const generatedToday = await QuoteModel.find({
+            createdAt: {
+                '$gte': startOfDay(currentDate), '$lt': endOfDay(currentDate)
+            }
+        })
 
-        let quoteCounter = 0
+        if (generatedToday.length > 0) {
+            const lastGeneratedToday = generatedToday[generatedToday.length - 1]?.sequential
+            sequential = lastGeneratedToday + 1
+        }
 
-        await QuoteModel.find({ _id: { '$ne': null } })
-            .then(response => {
-                if (response.length > 0) {
-                    let last = response[response.length - 1]
-                    let lastSequencial = parseInt(last.sequential)
+        const formatedSequential = sequential.toString().padStart(2, '0')
 
-                    quoteCounter = lastSequencial === 0 ? 1 : (lastSequencial + 1)
-                }
-                else {
-                    req.body.sequential = 1
-                    quoteCounter = 1
+        req.body = {
+            ...req.body,
+            createdAt: currentDate,
+            sequential: sequential,
+            number: `${day}${month}${year}${formatedSequential}`,
+        }
+
+        const { status } = req.body
+
+        if (status === "Em Aprovação") {
+            let batchesToUpdate = req.body.materialList.map(material => {
+                return {
+                    batchId: material.batchId,
+                    quantity: material.quantity
                 }
             })
 
-        req.body.number = `${quoteCounter}${day}${month}${year}`
+            await Promise.all(
+                batchesToUpdate.map(async (batch) => {
+                    let batchDB = await BatchMaterialModel.findOne({ 'batch': batch.batchId })
 
-        let totalLoss = 0
-        let totalValue = 0
-        let calculated = 0
-        let calculatedFinal = 0
+                    batchDB = {
+                        ...batchDB.toObject(),
+                        reserved: batchDB.reserved + batch.quantity,
+                        available: batchDB.available - batch.quantity
+                    }
 
-        req.body.materials.forEach(element => {
-            totalLoss += (element.quantityItens * element.value)
-        });
-
-        req.body.products.forEach(element => {
-            totalValue += (element.quantityItens * element.value)
-        });
-
-        calculated = totalValue - totalLoss
-        calculatedFinal = totalValue
-
-        if (req.body.discount > 0 || req.body.tax > 0) {
-            let taxes = req.body.tax - req.body.discount
-            let totalTax = 1 + taxes
-
-            calculated *= totalTax
-            calculatedFinal *= totalTax
+                    await BatchMaterialModel.findOneAndUpdate(
+                        { 'batch': batch.batchId }, batchDB
+                    )
+                })
+            )
         }
 
-        calculated += req.body.deliveryTax
-        calculatedFinal += req.body.deliveryTax
-
-        req.body.calculatedValue = calculated
-        //Apenas enquanto não há front
-        req.body.finalValue = calculatedFinal
-
-        const quote = new QuoteModel(req.body)
-        await quote
+        await new QuoteModel(req.body)
             .save()
             .then(response => {
-                return res.status(200).json(response)
+                let created = ''
+
+                if (status === 'Em Rascunho') created = 'Rascunho da cotação'
+                if (status === 'Em Aprovação') created = 'Cotação'
+
+                return res.status(200).json({
+                    quote: response,
+                    msg: `${created} ${response.number} criada com sucesso.`
+                })
             })
             .catch(error => {
                 return res.status(500).json(error)
             })
     }
 
-    async update(req, res) {
-        let date = new Date()
-        req.body.updatedAt = date
+    async updateOrConsolidateDraft(req, res) {
+        const { _id, status } = req.body
 
-        let totalLoss = 0
-        let totalValue = 0
-        let calculated = 0
-        let calculatedFinal = 0
+        req.body.updatedAt = currentDate
 
-        req.body.materials.forEach(element => {
-            totalLoss += (element.quantityItens * element.value)
-        });
+        if (status === "Em Aprovação") {
+            let batchesToUpdate = req.body.materialList.map(material => {
+                return {
+                    batchId: material.batchId,
+                    quantity: material.quantity
+                }
+            })
 
-        req.body.products.forEach(element => {
-            totalValue += (element.quantityItens * element.value)
-        });
+            await Promise.all(
+                batchesToUpdate.map(async (batch) => {
+                    let batchDB = await BatchMaterialModel.findOne({ 'batch': batch.batchId })
 
+                    batchDB = {
+                        ...batchDB.toObject(),
+                        reserved: batchDB.reserved + batch.quantity,
+                        available: batchDB.available - batch.quantity
+                    }
 
-        calculated = totalValue - totalLoss
-        calculatedFinal = totalValue
-
-        if (req.body.discount > 0 || req.body.tax > 0) {
-            let taxes = req.body.tax - req.body.discount
-            let totalTax = 1 + taxes
-
-            calculated *= totalTax
-            calculatedFinal *= totalTax
+                    await BatchMaterialModel.findOneAndUpdate(
+                        { 'batch': batch.batchId }, batchDB
+                    )
+                })
+            )
         }
 
-        calculated += req.body.deliveryTax
-        calculatedFinal += req.body.deliveryTax
-
-        req.body.calculatedValue = calculated
-        //Apenas enquanto não há front
-        req.body.finalValue = calculatedFinal
-
-
-        await QuoteModel.findByIdAndUpdate({ '_id': req.params.id }, req.body, { new: true })
+        await QuoteModel.findByIdAndUpdate({ '_id': _id }, req.body, { new: true })
             .then(response => {
-                return res.status(200).json(response)
-            })
-            .catch(error => {
-                return res.status(500).json(error)
-            })
-    }
+                let created = ''
 
-    async updateStatusToCancel(req, res) {
-        let date = new Date()
-        req.body.updatedAt = date
-        req.body.canceledAt = date
-        req.body.status = "Cancelada"
+                if (response.status === 'Em Rascunho')
+                    created = `Rascunho da cotação ${response.number} atualizada com sucesso.`
+                if (response.status === 'Em Aprovação')
+                    created = `Cotação ${response.number} criada com sucesso.`
 
-
-        await QuoteModel.findByIdAndUpdate({ '_id': req.params.id }, req.body, { new: true })
-            .then(response => {
-                return res.status(200).json(response)
-            })
-            .catch(error => {
-                return res.status(500).json(error)
-            })
-    }
-
-    async updateStatusToAccept(req, res) {
-        let date = new Date()
-        req.body.updatedAt = date
-        req.body.acceptedAt = date
-        req.body.status = "Aprovada"
-
-        await QuoteModel.findByIdAndUpdate({ '_id': req.params.id }, req.body, { new: true })
-            .then(response => {
-                return res.status(200).json(response)
+                return res.status(200).json({
+                    quote: response,
+                    msg: created
+                })
             })
             .catch(error => {
                 return res.status(500).json(error)
@@ -148,9 +126,130 @@ class QuoteController {
     }
 
     async list(req, res) {
-        await QuoteModel.find({ _id: { '$ne': null } })
+        const { number, status, filterChips, pageNumber, rowsPage } = req.body
+
+        let filter = { _id: { '$ne': null } }
+
+        try {
+            if (number)
+                filter = { ...filter, number: { $regex: number, $options: 'i' } }
+
+            if (status)
+                filter = { ...filter, status: status }
+
+            const totalDrafts = await QuoteModel.countDocuments({
+                ...filter,
+                status: "Em Rascunho"
+            })
+
+            const totalPending = await QuoteModel.countDocuments({
+                ...filter,
+                status: "Em Aprovação"
+            })
+
+            const total = await QuoteModel.countDocuments(filter)
+
+            const pages = Math.ceil(total / rowsPage)
+
+            const quotesDB = await QuoteModel.find(filter)
+                .sort('number')
+                .skip((pageNumber * rowsPage))
+                .limit(rowsPage)
+
+            const quotes = await Promise.all(
+                quotesDB.map(async (quote) => ({
+                    ...quote.toObject(),
+                    client: await ClientModel.findById(quote.client),
+                }))
+            );
+
+            return await res.status(200).json({
+                total,
+                pages,
+                quotes,
+                totalDrafts,
+                totalPending
+            })
+        }
+        catch (error) {
+            console.error('erro ao obter lista de cotações', error)
+            return res.status(500).json(error)
+        }
+    }
+
+    async discardDraft(req, res) {
+        await QuoteModel.findByIdAndDelete({ '_id': req.params.id })
             .then(response => {
-                return res.status(200).json(response)
+                return res.status(200).json({
+                    quote: response,
+                    msg: 'Rascunho deletado com sucesso.'
+                })
+            })
+            .catch(error => {
+                return res.status(500).json(error)
+            })
+    }
+
+    async changeQuoteState(req, res) {
+        const { _id } = req.body
+
+        req.body.updatedAt = currentDate
+
+        let batchesToUpdate = req.body.materialList.map(material => {
+            return {
+                batchId: material.batchId,
+                quantity: material.quantity
+            }
+        })
+
+        if (req.body.status === 'Cancelada') {
+            req.body.canceledAt = currentDate
+
+            await Promise.all(
+                batchesToUpdate.map(async (batch) => {
+
+                    let batchDB = await BatchMaterialModel.findOne({ 'batch': batch.batchId })
+
+                    batchDB = {
+                        ...batchDB.toObject(),
+                        reserved: batchDB.reserved - batch.quantity,
+                        available: batchDB.available + batch.quantity
+                    }
+
+                    await BatchMaterialModel.findOneAndUpdate(
+                        { 'batch': batch.batchId }, batchDB
+                    )
+                })
+            )
+        }
+
+        if (req.body.status === 'Aprovada') {
+            req.body.acceptedAt = currentDate
+
+            await Promise.all(
+                batchesToUpdate.map(async (batch) => {
+
+                    let batchDB = await BatchMaterialModel.findOne({ 'batch': batch.batchId })
+
+                    batchDB = {
+                        ...batchDB.toObject(),
+                        reserved: batchDB.reserved - batch.quantity,
+                        using: batchDB.using + batch.quantity
+                    }
+
+                    await BatchMaterialModel.findOneAndUpdate(
+                        { 'batch': batch.batchId }, batchDB
+                    )
+                })
+            )
+        }
+
+        await QuoteModel.findByIdAndUpdate({ '_id': _id }, req.body, { new: true })
+            .then(response => {
+                return res.status(200).json({
+                    quote: response,
+                    msg: `Cotação ${response.number} ${response.status.toUpperCase()} com sucesso.`
+                })
             })
             .catch(error => {
                 return res.status(500).json(error)

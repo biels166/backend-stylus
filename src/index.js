@@ -1,6 +1,7 @@
 const express = require('express')
 const cors = require('cors')
 require('dotenv').config()
+const { connectDB } = require('./config/database');
 
 const server = express()
 
@@ -14,6 +15,9 @@ server.listen(process.env.PORT || 3000, () => {
 
 const AuthRoutes = require('./routes/AuthRouter')
 server.use('/auth', AuthRoutes)
+
+const DocumentRoutes = require('./routes/DocumentRouter')
+server.use('/document', DocumentRoutes)
 
 const TaskRoutes = require('./routes/TaskRouter')
 server.use('/task', TaskRoutes)
@@ -56,3 +60,7 @@ server.use('/serviceorder', ServiceOrderRoutes)
 
 const NFRoutes = require('./routes/NFRouter')
 server.use('/nf', NFRoutes)
+
+connectDB().then(() => {
+    console.log('connectDB concluida');
+})

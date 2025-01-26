@@ -6,7 +6,6 @@ const { env } = require('node:process')
 const { CheckPrivateRouter } = require('../middlewares/AuthValidation')
 
 router.post('/',
-    QuoteValidation,
     CheckPrivateRouter([
         env.ADMINISTRADOR,
         env.VISUALIZAR_COTACAO,
@@ -14,6 +13,36 @@ router.post('/',
     ]),
     QuoteContoller.register)
 
+router.post('/updateOrConsolidateDraft',
+    CheckPrivateRouter([
+        env.ADMINISTRADOR,
+        env.VISUALIZAR_COTACAO,
+        env.ADICIONAR_COTACAO
+    ]),
+    QuoteContoller.updateOrConsolidateDraft)
+
+router.post('/list',
+    CheckPrivateRouter([
+        env.ADMINISTRADOR,
+        env.VISUALIZAR_COTACAO,
+    ]),
+    QuoteContoller.list)
+
+router.put('/changeState',
+    CheckPrivateRouter([
+        env.ADMINISTRADOR,
+        env.ADICIONAR_COTACAO,
+    ]),
+    QuoteContoller.changeQuoteState)
+
+router.delete('/:id',
+    CheckPrivateRouter([
+        env.ADMINISTRADOR,
+        env.ADICIONAR_COTACAO
+    ]),
+    QuoteContoller.discardDraft)
+
+/*
 router.put('/:id',
     QuoteValidation,
     CheckPrivateRouter([
@@ -38,12 +67,7 @@ router.put('/status/accept/:id',
         env.EDITAR_COTACAO
     ]),
     QuoteContoller.updateStatusToAccept)
+*/
 
-router.get('/list',
-    CheckPrivateRouter([
-        env.ADMINISTRADOR,
-        env.VISUALIZAR_COTACAO,
-    ]),
-    QuoteContoller.list)
 
 module.exports = router
