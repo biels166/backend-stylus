@@ -152,7 +152,7 @@ class QuoteController {
             const pages = Math.ceil(total / rowsPage)
 
             const quotesDB = await QuoteModel.find(filter)
-                .sort(number, -1)
+                .sort({number: -1})
                 .skip((pageNumber * rowsPage))
                 .limit(rowsPage)
 
