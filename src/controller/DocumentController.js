@@ -30,9 +30,107 @@ class DocumentController {
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Orçamento ${number}</title>
-            <style>
-                /* Seu estilo permanece o mesmo */
-            </style>
+  <style>
+            body {
+                font-family: Arial, sans-serif;
+                font-size: 14px;
+                margin: 20px;
+            }
+            .header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                color: #005F9E;
+                padding: 10px;
+                margin-bottom: 18px;
+            }
+            .header img {
+                height: 100px;
+            }
+            .header-info {
+                font-size: 20px;
+                text-align: right;
+            }
+            .section {
+                border: 1px solid #005F9E;
+                background: #E0ECF8;
+                padding: 10px;
+                margin-bottom: 10px;
+                border-radius: 5px;
+            }
+            .section-header {
+                background: #005F9E;
+                color: white;
+                font-weight: bold;
+                padding: 5px;
+                border-radius: 5px 5px 0 0;
+                text-align: center;
+                font-size: 18px;
+            }
+            .section-content {
+                background: white;
+                border-radius: 0 0 5px 5px;
+            }
+            .info {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: space-between;
+            }
+            .info div {
+                flex: 1;
+                margin: 5px 10px;
+            }
+            .table {
+                width: 100%;
+                border-collapse: collapse;
+                table-layout: fixed;
+            }
+            .table td {
+                border: 1px solid #005F9E;
+                padding: 8px;
+                text-align: left;
+                font-size: 14px;
+            }
+            .table th {
+                background: #005F9E;
+                color: white;
+                border: 1px solid #005F9E;
+                padding: 8px;
+                text-align: center;
+                font-size: 18px;
+            }
+            .table th:nth-child(1), .table td:nth-child(1) {
+                width: 80%;
+            }
+            .table th:nth-child(2), .table td:nth-child(2) {
+                width: 20%;
+            }
+            .total {
+                background: #E0ECF8;
+                font-weight: bold;
+                text-align: right;
+                padding: 10px;
+                font-size: 16px;
+            }
+            .lucro {
+                background: #D1F7C4;
+                color: #008000;
+                font-weight: bold;
+                text-align: center;
+                font-size: 20px;
+                padding: 10px;
+            }
+            .subTotal {
+                background: #E0ECF8;
+                color: #005F9E;
+                font-weight: bold;
+                text-align: right;
+                font-size: 16px;
+                padding: 20px 10px 0px;
+                margin-top: 0px;
+                margin-bottom: 0px;
+            }
+        </style>
         </head>
         <body>
         
@@ -123,7 +221,7 @@ class DocumentController {
         try {
             //const executablePath = require('puppeteer').executablePath()
             const executablePath = '/opt/render/.cache/puppeteer/chrome/linux-132.0.6834.110/chrome-linux64/chrome'
-            
+
             console.log('executablePath', executablePath)
 
             const browserConfig = !env.URLBASE?.includes('stylus') ? {} :
@@ -131,6 +229,8 @@ class DocumentController {
                     executablePath: executablePath,
                     args: ['--no-sandbox', '--disable-setuid-sandbox', '--headless'] // Flags necessárias
                 };
+
+            console.log('browserConfig', browserConfig)
 
             const browser = await puppeteer.launch(browserConfig); // Usa o Chromium padrão do Puppeteer
 
