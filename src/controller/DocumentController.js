@@ -121,9 +121,12 @@ class DocumentController {
         // execSync('rm -rf /opt/render/.cache/puppeteer');
 
         try {
+            const executablePath = require('puppeteer').executablePath()
+            console.log('executablePath', executablePath)
+
             const browserConfig = !env.URLBASE?.includes('stylus') ? {} :
                 {
-                    executablePath: require('puppeteer').executablePath(),
+                    executablePath: executablePath,
                     args: ['--no-sandbox', '--disable-setuid-sandbox', '--headless'] // Flags necessárias
                 };
 
@@ -174,11 +177,11 @@ class DocumentController {
 
             writeStream.on('error', (err) => {
                 console.error('Erro ao armazenar PDF: ', err);
-                return res.status(500).json({ error: 'Erro ao gerar orçamento' });
+                return res.status(500).json({ error: 'Erro ao armazenar PDF' });
             });
         }
         catch (error) {
-            console.error(error)
+            console.error('Erro ao gerar orçamento', error)
             return res.status(500).json({ error: 'Erro ao gerar orçamento' });
         }
     }
@@ -217,7 +220,7 @@ class DocumentController {
 
         } catch (err) {
             console.error('Erro ao buscar o arquivo:', err);
-            return res.status(500).json({ msg: 'Erro ao realizar o download do arquivo.' });
+            return res.status(500).json({ error: 'Erro ao realizar o download do arquivo.' });
         }
     }
 }
