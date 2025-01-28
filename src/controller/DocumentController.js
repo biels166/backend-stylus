@@ -123,7 +123,7 @@ class DocumentController {
         try {
             const browserConfig = !env.URLBASE?.includes('stylus') ? {} :
                 {
-                    executablePath: '/usr/bin/chromium-browser',
+                    executablePath: require('puppeteer').executablePath(),
                     args: ['--no-sandbox', '--disable-setuid-sandbox', '--headless'] // Flags necessárias
                 };
 
