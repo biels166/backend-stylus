@@ -118,63 +118,69 @@ class DocumentController {
         </html>`;
 
         // Verifica se o ambiente já tem o Chromium instalado
-       // execSync('rm -rf /opt/render/.cache/puppeteer');
+        // execSync('rm -rf /opt/render/.cache/puppeteer');
 
-        const browserConfig = !env.URLBASE?.includes('stylus') ? {} :
-            {
-                executablePath: '/usr/bin/chromium-browser',
-                args: ['--no-sandbox', '--disable-setuid-sandbox', '--headless'] // Flags necessárias
-            };
+        try {
+            const browserConfig = !env.URLBASE?.includes('stylus') ? {} :
+                {
+                    executablePath: '/usr/bin/chromium-browser',
+                    args: ['--no-sandbox', '--disable-setuid-sandbox', '--headless'] // Flags necessárias
+                };
 
-        const browser = await puppeteer.launch(browserConfig); // Usa o Chromium padrão do Puppeteer
+            const browser = await puppeteer.launch(browserConfig); // Usa o Chromium padrão do Puppeteer
 
-        const page = await browser.newPage();
-        await page.setContent(htmlContent);
+            const page = await browser.newPage();
+            await page.setContent(htmlContent);
 
-        // Gerar o PDF em memória
-        const pdfBuffer = await page.pdf({
-            format: 'A4',
-            printBackground: true,
-        });
-
-        await browser.close();
-
-        // Nome do arquivo
-        const docName = `Orçamento_${number}.pdf`;
-
-        // Armazenar o PDF no GridFS
-        const bucket = new GridFSBucket(mongoose.connection.db, { bucketName: 'pdfs' });
-        const writeStream = bucket.openUploadStream(
-            docName,
-            { metadata: { id: number } }
-        );
-
-        writeStream.end(pdfBuffer);
-
-        // Aguardar o evento de conclusão para pegar o fileId
-        writeStream.on('finish', async () => {
-            // Atualiza o orçamento com o link para o PDF
-            const url = `${env.URLBASE}/document/download/${number}`;
-            let body = {
-                ...req.body,
-                budgetLink: url,
-                budgetDocId: number,
-                __v: 0
-            };
-
-            await QuoteModel.findOneAndUpdate({ number: number }, body, { new: true });
-
-            return res.status(200).json({
-                url: url,
-                docId: number,
-                msg: `Orçamento ${number} gerado com sucesso`
+            // Gerar o PDF em memória
+            const pdfBuffer = await page.pdf({
+                format: 'A4',
+                printBackground: true,
             });
-        });
 
-        writeStream.on('error', (err) => {
-            console.error('Erro ao armazenar PDF: ', err);
-            return res.status(500).json({ msg: 'Erro ao gerar orçamento' });
-        });
+            await browser.close();
+
+            // Nome do arquivo
+            const docName = `Orçamento_${number}.pdf`;
+
+            // Armazenar o PDF no GridFS
+            const bucket = new GridFSBucket(mongoose.connection.db, { bucketName: 'pdfs' });
+            const writeStream = bucket.openUploadStream(
+                docName,
+                { metadata: { id: number } }
+            );
+
+            writeStream.end(pdfBuffer);
+
+            // Aguardar o evento de conclusão para pegar o fileId
+            writeStream.on('finish', async () => {
+                // Atualiza o orçamento com o link para o PDF
+                const url = `${env.URLBASE}/document/download/${number}`;
+                let body = {
+                    ...req.body,
+                    budgetLink: url,
+                    budgetDocId: number,
+                    __v: 0
+                };
+
+                await QuoteModel.findOneAndUpdate({ number: number }, body, { new: true });
+
+                return res.status(200).json({
+                    url: url,
+                    docId: number,
+                    msg: `Orçamento ${number} gerado com sucesso`
+                });
+            });
+
+            writeStream.on('error', (err) => {
+                console.error('Erro ao armazenar PDF: ', err);
+                return res.status(500).json({ error: 'Erro ao gerar orçamento' });
+            });
+        }
+        catch (error) {
+            console.error(error)
+            return res.status(500).json({ error: 'Erro ao gerar orçamento' });
+        }
     }
 
 
