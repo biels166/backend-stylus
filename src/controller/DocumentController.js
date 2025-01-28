@@ -121,7 +121,9 @@ class DocumentController {
         // execSync('rm -rf /opt/render/.cache/puppeteer');
 
         try {
-            const executablePath = require('puppeteer').executablePath()
+            //const executablePath = require('puppeteer').executablePath()
+            const executablePath = '/opt/render/.cache/puppeteer/chrome/linux-132.0.6834.110/chrome-linux64/chrome'
+            
             console.log('executablePath', executablePath)
 
             const browserConfig = !env.URLBASE?.includes('stylus') ? {} :

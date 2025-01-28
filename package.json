@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "postinstall": "npx puppeteer browsers install chrome"
+    "postinstall": "npx puppeteer browsers install chrome",
+    "start": "npm run postinstall && node src/index.js"
   },
   "keywords": [],
   "author": "Gabriel Santana",
