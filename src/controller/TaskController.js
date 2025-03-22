@@ -57,11 +57,6 @@ class TaskController {
         if (type)
             filter = { ...filter, type: { '$eq': type } }
 
-        /*
-            { description: 'Em Andamento', value: 1 },
-            { description: 'Concluídas', value: 2 },
-            { description: 'Todas', value: 3 }
-        */
         if (status && status !== 3)
             filter = { ...filter, status: { '$eq': status === 2 } }
 
@@ -87,8 +82,6 @@ class TaskController {
                 break
         }
 
-        console.log("filter", filter)
-
         try {
             const total = await TaskModel.countDocuments(filter)
             const pages = Math.ceil(total / rowsPage)
@@ -101,7 +94,7 @@ class TaskController {
             const tasks = await Promise.all(
                 tasksFromDB.map(async (task) => ({
                     ...task.toObject(),
-                    state: await GenerateTaskStatus(task, currentDate)
+                    state: GenerateTaskStatus(task, currentDate)
                 }))
             );
 

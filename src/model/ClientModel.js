@@ -2,17 +2,17 @@ const { mongoose } = require('../config/database')
 const Schema = mongoose.Schema
 
 const ClientSchema = new Schema({
-    type: { type: String, required: true },
+    type: { type: String },
     name: { type: String, required: true },
-    document: { type: String, required: true },
+    document: { type: String },
     email: { type: String },
     telephone: { type: String },
     cellphone: { type: String },
-    street: { type: String, required: true },
-    number: { type: String, required: true },
-    district: { type: String, required: true },
-    city: { type: String, required: true },
-    state: { type: String, required: true },
+    street: { type: String },
+    number: { type: String },
+    district: { type: String },
+    city: { type: String },
+    state: { type: String },
     complement: { type: String },
 })
 

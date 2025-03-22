@@ -151,7 +151,7 @@ class DocumentController {
                         <div><strong>Nome:</strong> ${client.name}</div>
                     </div>
                     <div class="info">
-                        <div><strong>${client.type === 'PJ' ? 'CNPJ' : 'CPF'}:</strong> ${client.document}</div>
+                        <div><strong>${client.type === '' ? '' : client.type === 'PJ' ? 'CNPJ' : 'CPF'}:</strong> ${client.document === '' ? '-' : client.document}</div>
                     </div>
                     <div class="info">
                         <div><strong>Celular:</strong> ${client.cellphone?.length > 0 ? client.cellphone : '-'}</div>

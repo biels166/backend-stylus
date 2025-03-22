@@ -5,65 +5,26 @@ const ServiceOrderValidation = require('../middlewares/ServiceOrderValidation')
 const { env } = require('node:process')
 const { CheckPrivateRouter } = require('../middlewares/AuthValidation')
 
-router.post('/manual',
-    ServiceOrderValidation,
+router.post('/',
     CheckPrivateRouter([
         env.ADMINISTRADOR,
         env.VISUALIZAR_OS,
         env.ADICIONAR_OS
     ]),
-    ServiceOrderController.manualRegister)
+    ServiceOrderController.register)
 
-router.put('/:id',
-    ServiceOrderValidation,
-    CheckPrivateRouter([
-        env.ADMINISTRADOR,
-        env.VISUALIZAR_OS,
-        env.EDITAR_OS
-    ]),
-    ServiceOrderController.update)
-
-router.put('/status/complete/:id',
-    CheckPrivateRouter([
-        env.ADMINISTRADOR,
-        env.VISUALIZAR_OS,
-        env.EDITAR_OS
-    ]),
-    ServiceOrderController.updateStatusToComplete)
-
-router.get('/list',
+router.post('/list',
     CheckPrivateRouter([
         env.ADMINISTRADOR,
         env.VISUALIZAR_OS
     ]),
     ServiceOrderController.list)
 
-router.get('/late',
+router.post('/completeOrder',
     CheckPrivateRouter([
         env.ADMINISTRADOR,
-        env.VISUALIZAR_OS
+        env.EDITAR_OS
     ]),
-    ServiceOrderController.late)
-
-router.get('/today',
-    CheckPrivateRouter([
-        env.ADMINISTRADOR,
-        env.VISUALIZAR_OS
-    ]),
-    ServiceOrderController.today)
-
-router.get('/week',
-    CheckPrivateRouter([
-        env.ADMINISTRADOR,
-        env.VISUALIZAR_OS
-    ]),
-    ServiceOrderController.week)
-
-router.get('/month',
-    CheckPrivateRouter([
-        env.ADMINISTRADOR,
-        env.VISUALIZAR_OS
-    ]),
-    ServiceOrderController.month)
+    ServiceOrderController.completeOrder)
 
 module.exports = router

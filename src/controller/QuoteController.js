@@ -126,7 +126,7 @@ class QuoteController {
     }
 
     async list(req, res) {
-        const { number, status, filterChips, pageNumber, rowsPage } = req.body
+        const { number, status, pageNumber, rowsPage } = req.body
 
         let filter = { _id: { '$ne': null } }
 

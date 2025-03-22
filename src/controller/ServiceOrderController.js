@@ -1,227 +1,157 @@
 const { model } = require('mongoose')
 const ServiceOrderModel = require('../model/ServiceOrderModel')
-const {startOfDay, endOfDay, startOfWeek, endOfWeek, endOfMonth, startOfMonth} = require('date-fns')
+const ClientModel = require('../model/ClientModel')
+const BatchMaterialModel = require('../model/BatchMaterialModel')
+const { startOfDay, endOfDay, startOfWeek, endOfWeek, endOfMonth, startOfMonth } = require('date-fns')
+const GenerateOrderStatusStyle = require('../utils/GenerateOrderStatusStyle')
 const currentDate = new Date()
-
+const tomorrow = new Date().setDate(currentDate.getDate() + 1)
 class ServiceOrderController {
+    async list(req, res) {
+        const { number, status, pageNumber, rowsPage, dateFilter } = req.body
 
-    async manualRegister(req, res) {
-        let date = new Date()
-        req.body.createdAt = date
+        let filter = { _id: { '$ne': null } }
 
-        let day = date.getDate().toString().padStart(2, '0')
-        let month = (date.getMonth() + 1).toString().padStart(2, '0')
-        let year = date.getUTCFullYear().toString().slice(2)
+        try {
+            if (number)
+                filter = { ...filter, number: { $regex: number, $options: 'i' } }
 
-        let orderCounter = 0
+            if (status)
+                filter = { ...filter, status: status }
 
-        await ServiceOrderModel.find({ _id: { '$ne': null } })
-            .then(response => {
-                if (response.length > 0) {
-                    let manuals = response.filter(i => i.number.startsWith('OSM'))
-                    let lastNumber = manuals[manuals.length - 1].sequential
+            const todayFilter = { deliveryDate: { '$gte': startOfDay(currentDate), '$lt': endOfDay(currentDate) } }
+            const tomorrowFilter = { deliveryDate: { '$gte': startOfDay(tomorrow), '$lt': endOfDay(tomorrow) } }
+            const thisWeekFilter = { deliveryDate: { '$gte': startOfWeek(currentDate), '$lt': startOfWeek(currentDate) } }
+            const lateFilter = { deliveryDate: { '$lt': currentDate }, status: 'Em Execução' }
 
-                    orderCounter = lastNumber === 0 ? 1 : (lastNumber + 1)
+            if (status !== 'Concluída') {
+                switch (dateFilter) {
+                    case 'Hoje':
+                        filter = { ...filter, ...todayFilter }
+                        break
+
+                    case 'Essa Semana':
+                        filter = { ...filter, ...thisWeekFilter }
+                        break
+
+                    case 'Amanhã':
+                        filter = { ...filter, ...tomorrowFilter }
+                        break
+
+                    case 'Atrasada':
+                        filter = { ...filter, ...lateFilter }
+                        break
+
+                    default:
+                        filter = { ...filter }
+                        break
                 }
-                else {
-                    req.body.sequential = 1
-                    orderCounter = 1
-                }
+            }
+
+            const totalToday = await ServiceOrderModel.countDocuments(todayFilter)
+            const totalTomorrow = await ServiceOrderModel.countDocuments(tomorrowFilter)
+            const totalThisWeek = await ServiceOrderModel.countDocuments(thisWeekFilter)
+            const totalLate = await ServiceOrderModel.countDocuments(lateFilter)
+
+            const total = await ServiceOrderModel.countDocuments(filter)
+
+            const pages = Math.ceil(total / rowsPage)
+
+            const serviceOrdersDB = await ServiceOrderModel.find(filter)
+                .sort({ number: -1 })
+                .skip((pageNumber * rowsPage))
+                .limit(rowsPage)
+
+            const serviceOrders = await Promise.all(
+                serviceOrdersDB.map(async (order) => ({
+                    ...order.toObject(),
+                    client: await ClientModel.findById(order.client),
+                    stateStyle: GenerateOrderStatusStyle(order)
+                }))
+            );
+
+            return await res.status(200).json({
+                total,
+                pages,
+                serviceOrders,
+                totalToday,
+                totalTomorrow,
+                totalThisWeek,
+                totalLate
             })
-
-        req.body.number = `OSM${orderCounter}${day}${month}${year}`
-
-        let totalLoss = 0
-        let totalValue = 0
-        let calculated = 0
-        let calculatedFinal = 0
-
-        req.body.materials.forEach(element => {
-            totalLoss += (element.quantityItens * element.value)
-        });
-
-        req.body.products.forEach(element => {
-            totalValue += (element.quantityItens * element.value)
-        });
-
-        calculated = totalValue - totalLoss
-        calculatedFinal = totalValue
-
-        if (req.body.discount > 0 || req.body.tax > 0) {
-            let taxes = req.body.tax - req.body.discount
-            let totalTax = 1 + taxes
-
-            calculated *= totalTax
-            calculatedFinal *= totalTax
         }
+        catch (error) {
+            console.error('erro ao obter lista de ordens de serviço', error)
+            return res.status(500).json(error)
+        }
+    }
 
-        calculated += req.body.deliveryTax
-        calculatedFinal += req.body.deliveryTax
 
-        req.body.calculatedValue = calculated
-        //Apenas enquanto não há front
-        req.body.finalValue = calculatedFinal
+    async register(req, res) {
+        const { number, status, acceptedAt } = req.body
+
+        req.body.number = `OS-${number}`
+        req.body.quoteNumber = number
+        req.body.quoteStatus = status
+        req.body.status = "Em Execução"
+        req.body.createdAt = new Date(acceptedAt)
 
         const serviceOrder = new ServiceOrderModel(req.body)
         await serviceOrder
             .save()
             .then(response => {
-                return res.status(200).json(response)
+                return res.status(200).json({
+                    order: response,
+                    msg: `Ordem de Serviço ${response.number} criada com sucesso.`
+                })
             })
             .catch(error => {
                 return res.status(500).json(error)
             })
     }
 
-    async register(req, res) {
-        let soBody = new ServiceOrderModel()
+    async completeOrder(req, res) {
+        const { deliveryDate, materialList, _id } = req.body
 
-        soBody.createdAt = new Date()
-
-        soBody.number =  `OS${req.body.number}`
-        soBody.Sequential = req.body.sequential
-
-        soBody.client = req.body.client
-        soBody.materials = req.body.materials
-        soBody.products = req.body.products
-
-        soBody.discount = req.body.discount
-        soBody.deliveryTax = req.body.delivetyTax
-        soBody.deliveryDate = req.body.delivetyDate
-        soBody.tax = req.body.tax
-        soBody.calculatedValue = req.body.calculatedValue
-        soBody.finalValue = req.body.finalValue
-        soBody.obs = req.body.obs
-        soBody.finalValue = req.body.finalValue
-        .status = "Em execução"        
-
-        const serviceOrder = new ServiceOrderModel(soBody)
-        await serviceOrder
-            .save()
-            .then(response => {
-                return res.status(200).json(response)
-            })
-            .catch(error => {
-                return res.status(500).json(error)
-            })
-    }
-
-    async update(req, res) {
-        let date = new Date()
-        req.body.updatedAt = date
-
-        let totalLoss = 0
-        let totalValue = 0
-        let calculated = 0
-        let calculatedFinal = 0
-
-        req.body.materials.forEach(element => {
-            totalLoss += (element.quantityItens * element.value)
-        });
-
-        req.body.products.forEach(element => {
-            totalValue += (element.quantityItens * element.value)
-        });
-
-
-        calculated = totalValue - totalLoss
-        calculatedFinal = totalValue
-
-        if (req.body.discount > 0 || req.body.tax > 0) {
-            let taxes = req.body.tax - req.body.discount
-            let totalTax = 1 + taxes
-
-            calculated *= totalTax
-            calculatedFinal *= totalTax
-        }
-
-        calculated += req.body.deliveryTax
-        calculatedFinal += req.body.deliveryTax
-
-        req.body.calculatedValue = calculated
-        //Apenas enquanto não há front
-        req.body.finalValue = calculatedFinal
-
-
-        await QuoteModel.findByIdAndUpdate({ '_id': req.params.id }, req.body, { new: true })
-            .then(response => {
-                return res.status(200).json(response)
-            })
-            .catch(error => {
-                return res.status(500).json(error)
-            })
-    }
-
-    async updateStatusToComplete(req, res) {
-        let date = new Date()
-        req.body.deliveredAt = date
+        req.body.deliveryDate = new Date(deliveryDate)
         req.body.status = "Concluída"
 
-        await ServiceOrderModel.findByIdAndUpdate({ '_id': req.params.id }, req.body, { new: true })
+        let batchesToUpdate = materialList.map(material => {
+            return {
+                batchId: material.batchId,
+                quantity: material.quantity,
+                quantityUsed: material.quantityUsed,
+                rest: material.quantity - material.quantityUsed
+            }
+        })
+
+        await Promise.all(
+            batchesToUpdate.map(async (batch) => {
+                let batchDB = await BatchMaterialModel.findOne({ 'batch': batch.batchId })
+
+                batchDB = {
+                    ...batchDB.toObject(),
+                    using: batchDB.using - batch.quantity,
+                    consumed: batchDB.consumed + batch.quantityUsed,
+                    available: batchDB.available + batch.rest
+                }
+
+                await BatchMaterialModel.findOneAndUpdate(
+                    { 'batch': batch.batchId }, batchDB
+                )
+            })
+        )
+
+        await ServiceOrderModel.findByIdAndUpdate({ '_id': _id }, req.body, { new: true })
             .then(response => {
-                return res.status(200).json(response)
+                return res.status(200).json({
+                    order: response,
+                    msg: `Ordem de serviço ${response.number} ${response.status.toUpperCase()} com sucesso.`
+                })
             })
             .catch(error => {
                 return res.status(500).json(error)
             })
-    }
-
-    async list(req, res) {
-        await ServiceOrderModel.find({ _id: { '$ne': null } })
-            .then(response => {
-                return res.status(200).json(response)
-            })
-            .catch(error => {
-                return res.status(500).json(error)
-            })
-    }
-
-    async late(req, res) {
-        await ServiceOrderModel.find({ 'deliveryDate': { '$lt': currentDate } })
-            .sort('deliveryDate')
-            .then(response => {
-                return res.status(200).json(response)
-            })
-            .catch(error => {
-                return res.status(500).json(error)
-            })
-
-    }
-
-    async today(req, res) {
-        await ServiceOrderModel.find({ 'deliveryDate': { '$gte': startOfDay(currentDate), '$lt': endOfDay(currentDate) } })
-            .sort('deliveryDate')
-            .then(response => {
-                return res.status(200).json(response)
-            })
-            .catch(error => {
-                return res.status(500).json(error)
-            })
-
-    }
-
-    async week(req, res) {
-        await ServiceOrderModel.find({ 'deliveryDate': { '$gte': startOfWeek(currentDate), '$lt': endOfWeek(currentDate) } })
-            .sort('deliveryDate')
-            .then(response => {
-                return res.status(200).json(response)
-            })
-            .catch(error => {
-                return res.status(500).json(error)
-            })
-
-    }
-
-    async month(req, res) {
-        await ServiceOrderModel.find({ 'deliveryDate': { '$gte': startOfMonth(currentDate), '$lt': endOfMonth(currentDate) } })
-            .sort('deliveryDate')
-            .then(response => {
-                return res.status(200).json(response)
-            })
-            .catch(error => {
-                return res.status(500).json(error)
-            })
-
     }
 }
 
